@@ -4,6 +4,7 @@
 #define N (8 * 1024*1024 / sizeof(size_t))
 
 list_t* allocated = NULL;
+list_t* freed = NULL;
 
 void* malloc(size_t size){
 
@@ -44,14 +45,51 @@ void* malloc(size_t size){
     }
 
     // Can be used for debugging
-    // printf("%d\n", (void*) new_memory_address + meta_size);
-    // printf("%d\n", (void*) entry->data);
+    printf("%d\n", (void*) new_memory_address + meta_size);
+    printf("%d\n", (void*) entry->data);
 
     return (void*) entry->data;
+}
+
+void free(void* ptr) {
+    list_t* current = allocated;
+
+    printf("Size of list_t is: %d\n", sizeof(list_t));
+    printf("ptr is %d\n", (int*)ptr);
+
+    list_t* our_list = (int*) ptr - sizeof(list_t);
+
+    printf("Size of the freed area: %d", our_list->size);
+
+
+    // Hantera ifall ptr inte finns i kön överhuvudtaget
+    // Find node that is pointing at our target ( call this parent )
+    // while (&(current->next->data) != ptr) {
+    //     current = current->next;
+    // }
+    // list_t* target = current->next;
+    
+    // // make parent point at targets next ( remove target from queue )
+    // current->next = target->next;
+    // // Place target in free queue
+    // if(freed == NULL) {
+    //     freed = target;
+    //     freed->next = NULL;
+    // }
+    // else {
+    //     // Handle this
+    // }
 }
 
 int main ( int argc, char **argv ) {
     printf("Program started \n");
     void* a = malloc(26);
-    void* b = malloc(1);
+    malloc(26);
+    malloc(26);
+    malloc(26);
+    malloc(26);
+    malloc(26);
+    malloc(26);
+    // void* b = malloc(1);
+    free(a);
 }
