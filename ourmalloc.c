@@ -7,7 +7,7 @@ list_t* allocated = NULL;
 list_t* freed = NULL;
 
 void* malloc(size_t size){
-    
+
     /* 
         How much size do we need to store meta information?
 
@@ -44,19 +44,17 @@ void* malloc(size_t size){
         current->next = entry;
     }
 
-<<<<<<< HEAD
     printf("%p\n", new_memory_address + meta_size);
     printf("%p\n", entry->data);
     printf("%d\n", meta_size);
 
-    return (void*) (new_memory_address + meta_size);
-=======
+    //return (void*) (new_memory_address + meta_size);
     // Can be used for debugging
     printf("%d\n", (void*) new_memory_address + meta_size);
     printf("%d\n", (void*) entry->data);
 
     return (void*) entry->data;
->>>>>>> 4f346371fe4beae4750491610b70534104b01392
+
 }
 
 void free(void* ptr) {
