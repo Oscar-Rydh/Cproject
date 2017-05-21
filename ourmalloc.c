@@ -47,6 +47,7 @@ void* malloc(size_t size){
     printf("%p\n", new_memory_address + meta_size);
     printf("%p\n", entry->data);
     printf("%d\n", meta_size);
+    printf("%d\n", entry->size);
 
     //return (void*) (new_memory_address + meta_size);
     // Can be used for debugging
@@ -61,41 +62,81 @@ void free(void* ptr) {
     list_t* current = allocated;
 
     printf("Size of list_t is: %d\n", sizeof(list_t));
-    printf("ptr is %d\n", (int*)ptr);
+    //printf("ptr to be freed is %d\n", (list_t*)ptr);
+    int pointer_to_data = (unsigned int) ptr;
+    int pointer_to_list = ptr - sizeof(list_t);
+    printf("Pointer to list to be freed is: %d\n", pointer_to_list);
+    printf("Pointer to allocated head: %d\n", current);
+    //list_t* to_be_available = (list_t*) pointer_to_list;
 
-    list_t* our_list = (int*) ptr - sizeof(list_t);
-
-    printf("Size of the freed area: %d", our_list->size);
+    //printf("Size of the freed area: %d\n", to_be_available->size);
 
 
     // Hantera ifall ptr inte finns i kön överhuvudtaget
+    //We want to remove the head
+    printf("Current pointer is: %d\n", (int*)current);
+
+
     // Find node that is pointing at our target ( call this parent )
-    // while (&(current->next->data) != ptr) {
-    //     current = current->next;
-    // }
-    // list_t* target = current->next;
-    
+    list_t* target = NULL;
+    //Check if free is for head
+    if ((int*) current != pointer_to_list) {
+        while ((int *) current->next != pointer_to_list) {
+            current = current->next;
+        }
+        target = current->next;
+        current->next = target->next;
+        printf("Freeing something in the middle\n");
+    } else {
+        //Move head of allocated
+        printf("Moving the allocated head to %d\n", allocated->next);
+        allocated = allocated->next;
+        target = current;
+    }
     // // make parent point at targets next ( remove target from queue )
-    // current->next = target->next;
+
     // // Place target in free queue
-    // if(freed == NULL) {
-    //     freed = target;
-    //     freed->next = NULL;
-    // }
-    // else {
-    //     // Handle this
-    // }
+     if(freed == NULL) {
+         printf("Setting free head to: %d\n", target);
+         freed = target;
+         target->next = NULL;
+     }
+     else {
+         list_t * free_current = freed;
+        while (free_current->next != NULL) {
+            free_current = free_current->next;
+        }
+         free_current->next = target;
+         target->next = NULL;
+         printf("Appending to freed next the pointer %d\n", target);
+    }
+    return;
 }
 
 int main ( int argc, char **argv ) {
     printf("Program started \n");
-    void* a = malloc(26);
-    malloc(26);
-    malloc(26);
-    malloc(26);
-    malloc(26);
-    malloc(26);
-    malloc(26);
-    // void* b = malloc(1);
+    void* a = malloc(260);
+    void* b = malloc(360);
+    void* c = malloc(180);
+    void* d = malloc(500);
+    printf("Freeing a\n");
     free(a);
+    printf("Freeing c\n");
+    free(c);
+    printf("Freeing d\n");
+    free(d);
+    printf("Freeing b\n");
+    free(b);
+    list_t* current = freed;
+    printf("Freehead is: %d\n", current);
+    printf("It has size: %d\n", current->size);
+    while (current->next != NULL) {
+        printf("The next pointer is: %d\n", current->next);
+        printf("The next size is: %d\n", current->next->size);
+        current = current->next;
+    }
+    if (allocated == NULL) {
+        printf("All of the memory is freed\n");
+    }
+
 }
