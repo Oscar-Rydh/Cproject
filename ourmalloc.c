@@ -8,7 +8,7 @@ list_t* head = NULL;
 void* malloc(size_t size){
 
     // How much size do we need to store meta information?
-    int meta_size = sizeof(list_t) + sizeof(size);
+    int meta_size = sizeof(list_t) + sizeof(size) - sizeof(size_t);
 
     // Allocate the memory
     void* new_memory_address = (list_t*) sbrk(size + meta_size);
@@ -30,6 +30,10 @@ void* malloc(size_t size){
         }
         current->next = entry;
     }
+
+    printf("%p\n", new_memory_address + meta_size);
+    printf("%p\n", entry->data);
+    printf("%d\n", meta_size);
 
     return (void*) (new_memory_address + meta_size);
 }
