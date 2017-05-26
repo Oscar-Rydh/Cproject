@@ -26,15 +26,11 @@ void* malloc(size_t size){
 
     //Check if available free memory exists
     //If it does, remove it from the free pool and reallocate it
-    //printf("Checking the free memory\n");
-    //printf("Freed is: %d\n", freed);
     if (freed != 0) {
         list_t* current_free = freed;
-        //printf("Current free: %d\n", current_free);
         list_t* previous = NULL;
         while (current_free != NULL) {
             if (current_free->size >= size) {
-                //printf("Allocating from free memory\n");
                 if (previous != NULL) {
                     //Move pointers in free memory
                     previous->next = current_free->next;
@@ -58,7 +54,6 @@ void* malloc(size_t size){
             current_free = current_free->next;
         }
     }
-    //printf("Trying to allocate more memory \n");
     // Allocate new memory
     void* new_memory_address = (list_t*) sbrk(size + meta_size);
 
@@ -80,38 +75,14 @@ void* malloc(size_t size){
         current->next = entry;
     }
 
-    //printf("%p\n", new_memory_address + meta_size);
-    //printf("%p\n", entry->data);
-    //printf("%d\n", meta_size);
-    //printf("%d\n", entry->size);
-
-    //return (void*) (new_memory_address + meta_size);
-    // Can be used for debugging
-    //printf("%d\n", (void*) new_memory_address + meta_size);
-    //printf("%d\n", (void*) entry->data);
-
     return (void*) entry->data;
 
 }
 
 void free(void* ptr) {
     list_t* current = allocated;
-
-    //printf("Size of list_t is: %d\n", sizeof(list_t));
-    //printf("ptr to be freed is %d\n", (list_t*)ptr);
     int pointer_to_data = (unsigned int) ptr;
     int pointer_to_list = ptr - sizeof(list_t);
-    //printf("Pointer to list to be freed is: %d\n", pointer_to_list);
-    //printf("Pointer to allocated head: %d\n", current);
-    //list_t* to_be_available = (list_t*) pointer_to_list;
-
-    //printf("Size of the freed area: %d\n", to_be_available->size);
-
-
-    // Hantera ifall ptr inte finns i kön överhuvudtaget
-    //We want to remove the head
-    //printf("Current pointer is: %d\n", (int*)current);
-
 
     // Find node that is pointing at our target ( call this parent )
     list_t* target = NULL;
@@ -129,11 +100,9 @@ void free(void* ptr) {
         allocated = allocated->next;
         target = current;
     }
-    // // make parent point at targets next ( remove target from queue )
 
     // // Place target in free queue
      if(freed == NULL) {
-         //printf("Setting free head to: %d\n", target);
          freed = target;
          target->next = NULL;
      }
@@ -144,7 +113,6 @@ void free(void* ptr) {
         }
          free_current->next = target;
          target->next = NULL;
-         //printf("Appending to freed next the pointer %d\n", target);
     }
     return;
 }
