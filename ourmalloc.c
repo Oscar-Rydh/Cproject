@@ -109,25 +109,26 @@ void* realloc(void* ptr, size_t size){
         return;
     }
 
-    void* block = malloc(size);
-    if (block == NULL) {
-        return NULL;
-    }
-    list_t* new_block = (list_t*) ((char*) block - sizeof(list_t));
     list_t* current_block = (list_t*) ((char*) ptr - sizeof(list_t));
     size_t new_size = 0;
-    if(current_block->size - sizeof(list_t) < size){
-        new_size = current_block->size - sizeof(list_t);
+    if(current_block->size - sizeof(list_t) > size){
+        return ptr;
     } else {
         new_size = size;
-    }
-    // Copy data to reallocated block
-    size_t i;
-    for (i = 0; i < new_size; i++){
-        new_block->data[i] = current_block->data[i];
-    }
-    free(ptr);
+        void* block = malloc(size);
+        if (block == NULL) {
+            return NULL;
+        }
+        list_t* new_block = (list_t*) ((char*) block - sizeof(list_t));
+        // Copy data to reallocated block
+        size_t i;
+        for (i = 0; i < new_size; i++){
+            new_block->data[i] = current_block->data[i];
+        }
+        free(ptr);
 
-    return new_block->data;
+        return new_block->data;
+    }
+
 
 }
