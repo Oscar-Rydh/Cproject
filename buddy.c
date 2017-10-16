@@ -140,7 +140,7 @@ static struct block_t* get_buddy(block_t* block) {
 
     // If a buddy will never exists
     if(block->kval >= MAX_K) {
-        printf("There will never exist a buddy for block with K: %d", (int)block->kval);
+        printf("There will never exist a buddy for block with K: %d\n", (int)block->kval);
         return NULL;
     }
 
@@ -253,6 +253,23 @@ void free(void* ptr) {
 
 // Hitta count st minnen av storlek size, fyll med nollor och returnera pekare
 void* calloc(size_t count, size_t size) {
+
+    // Return NULL if something is zero
+    if(size == 0 || count == 0) {
+        return NULL;
+    }
+    
+    size_t block_size = size * count;
+
+    // Allocate all memory
+    void* block = malloc(block_size);
+
+    if(!block) {
+        return NULL;
+    }
+    memset(block, 0, block_size);
+    return block;
+
 }
 
 // Allokera om ptr till storlek size och returnera ptr
@@ -286,7 +303,10 @@ int main ( int argc, char **argv ) {
     init();
     block_t* block = malloc(16);
     print_freelist_status();
-    if(block)
+    if(block) {
         free(block);
         print_freelist_status();
+    }
+    calloc(2, 16);
+    print_freelist_status();
 }
