@@ -3,7 +3,7 @@
 #include <math.h>
 
 // Global definitions
-#define MAX_K 10
+#define MAX_K 15
 #define BLOCK_META_SIZE sizeof(struct block_t)
 #define MAX_BLOCK_SIZE (1L << MAX_K)
 
@@ -22,7 +22,7 @@ static void split_block(struct block_t* block) {
     // Calculate address of other half
     size_t block_size = (1L << block->kval);
     char* buddy_address = ((char*) block) + block_size;
-    struct block_t* buddy = (struct block_t*) buddy_address;
+    block_t* buddy = (block_t*) buddy_address;
 
     // Set attributes of buddy
     buddy->reserved = 0;
@@ -273,10 +273,39 @@ void* calloc(size_t count, size_t size) {
 }
 
 // Allokera om ptr till storlek size och returnera ptr
-// Om inte minnet inte kan göras större, allokera nytt och kopiera innehåll samt free:a det gamla. Returnera pekare
+// Om minnet inte kan göras större, allokera nytt och kopiera innehåll samt free:a det gamla. Returnera pekare
 // Om ptr = NULL, utför malloc
 // Om size = 0 och ptr != NULL, allokera så lite minne som möjligt och returnera pekare
 void* realloc(void* ptr, size_t size) {
+
+    // Fallback to malloc if ptr is NULL
+    if(!ptr) {
+        return malloc(size);
+    }
+
+    // Fallback to free if size = 0
+    if(size == 0) {
+        free(ptr);
+        return NULL;
+    }
+
+    // Retrieve block that should be realloced
+    block_t* block = (block_t*) ptr-BLOCK_META_SIZE;
+    size_t current_block_size =  (1L << block->kval);
+
+    // Simply return ptr if its size already is enough
+    if((size + BLOCK_META_SIZE) <= current_block_size) {
+        return ptr;
+    }
+
+    void* new_ptr = malloc(size);
+    if(!new_ptr) {
+        return NULL;
+    }
+
+    memcpy(new_ptr, ptr, current_block_size - BLOCK_META_SIZE);
+    free(ptr);
+    return new_ptr;
 }
 
 
@@ -302,11 +331,23 @@ int main ( int argc, char **argv ) {
     printf("I am running\n");
     init();
     block_t* block = malloc(16);
-    print_freelist_status();
+    // print_freelist_status();
     if(block) {
         free(block);
         print_freelist_status();
     }
-    calloc(2, 16);
+    block_t* block_2 = calloc(2, 16);
+
+    block = malloc(250);
+    block = realloc(block, 370);
+    if(block) {
+        free(block);
+    }
+    if(block_2) {
+        free(block_2);
+    }
     print_freelist_status();
+
+
+
 }
