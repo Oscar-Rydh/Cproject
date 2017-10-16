@@ -131,12 +131,124 @@ void* malloc(size_t size) {
 
     // Return block address and move pointer BLOCK_META_SIZE steps
     printf("K of block: %d\n", (int)block->kval);
-    
-    // Print freelist status for verification
-    int temp_k;
-    for(temp_k = MAX_K; temp_k > 0; temp_k--)
-        printf("Freelist K: %d. %s\n", temp_k, freelist[temp_k] == NULL ? "false" : "true");
+
     return block + BLOCK_META_SIZE;
+}
+
+// Gets the buddy of the block, if it is availible. Otherwise NULL
+static struct block_t* get_buddy(block_t* block) {
+
+    // If a buddy will never exists
+    if(block->kval >= MAX_K) {
+        printf("There will never exist a buddy for block with K: %d", (int)block->kval);
+        return NULL;
+    }
+
+    // Calculate size of block
+    size_t block_size = 1L << block->kval;
+
+    // Retrieve the buddy
+    struct block_t* buddy = (char*)block + block_size;
+
+    // Only return buddy if free
+    if(buddy->reserved || buddy->kval != block->kval) {
+        printf("Buddy was of wrong type, returning NULL\n");
+        printf("Buddy reserved: %s\n", buddy->reserved ? "true" : "false");
+        printf("Buddy kval: %d\n", buddy->kval);
+        return NULL;
+    }
+
+    return buddy;
+
+}
+
+static void put_block_in_freelist(block_t* block) {
+
+    // Change params of block
+    block->reserved = 0;
+
+    // Connect with freelist
+    block->next = freelist[block->kval];
+    if(block->next) {
+        block->next->prev = block;
+    }
+    block->prev = NULL;
+
+    // Place block first in freelist
+    freelist[block->kval] = block;
+
+}
+
+static void remove_block_from_freelist(block_t* block) {
+
+    // Make sure freelist queue are still intact
+
+    if(block->prev) {
+        // Make previous block point to my next. AKA skip me
+        block->prev->next = block->next;
+    }
+    else {
+        // Make first block in list my next. AKA skip me
+        freelist[block->kval] = block->next;
+    }
+
+    if(block->next) {
+        // Make my next block point back to my prev. AKA skip me
+        block->next->prev = block->prev;
+    }
+
+}
+
+static struct block_t* merge_blocks(block_t* block, block_t* buddy) {
+
+    remove_block_from_freelist(buddy);
+
+    // Store the new pointer
+    struct block_t* merged_block = block < buddy ? block : buddy;
+
+    // Increment kval of merged block
+    ++merged_block->kval;
+
+    return merged_block;
+
+}
+
+static void deallocate(block_t* block) {
+
+    printf("Will deallocate block\n");
+
+    // Get a reference to the buddy
+    struct block_t* buddy = get_buddy(block);
+
+    if(!buddy) {
+        printf("Could not merge with buddy. Put block in freelist\n");
+        put_block_in_freelist(block);
+        return;
+    }
+
+    // Merge block and buddy
+    block = merge_blocks(block, buddy);
+
+    // Deallocate the merged block if possible
+    deallocate(block);
+}
+
+// Deallokera ptr
+// Om ptr = NULL, gör ingenting
+void free(void* ptr) {
+
+    printf("\nWill free block\n");
+    if(!ptr) {
+        printf("Recieved NULL pointer\n");
+        return;
+    }
+
+    // Get reference to the block
+    struct block_t* block = (block_t*) ptr-BLOCK_META_SIZE;
+    printf("Block kval: %d\n", block->kval);
+
+    deallocate(block);
+    
 }
 
 // Hitta count st minnen av storlek size, fyll med nollor och returnera pekare
@@ -150,10 +262,6 @@ void* calloc(size_t count, size_t size) {
 void* realloc(void* ptr, size_t size) {
 }
 
-// Deallokera ptr
-// Om ptr = NULL, gör ingenting
-void free(void* ptr) {
-}
 
 void init() {
     // Allocate all memory at first
@@ -162,11 +270,23 @@ void init() {
     starting_block->reserved = 0;
     starting_block->prev = NULL;
     starting_block->next = NULL;
+    printf("Root memory: %d", (int)starting_block);
     freelist[MAX_K] = starting_block;
+}
+
+void print_freelist_status() {
+    // Print freelist status for verification
+    int temp_k;
+    for(temp_k = MAX_K; temp_k > 0; temp_k--)
+        printf("Free block of size K: %d. %s\n", temp_k, freelist[temp_k] == NULL ? "false" : "true");
 }
 
 int main ( int argc, char **argv ) {
     printf("I am running\n");
     init();
-    malloc(16);
+    block_t* block = malloc(16);
+    print_freelist_status();
+    if(block)
+        free(block);
+        print_freelist_status();
 }
